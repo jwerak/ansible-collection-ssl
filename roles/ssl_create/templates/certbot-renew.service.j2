@@ -1,0 +1,20 @@
+[Unit]
+Description=Certbot Renewal
+Documentation=man:podman-generate-systemd(1)
+Wants=network.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+ExecStartPre=/bin/rm -f %t/certbot-renew.pid %t/certbot-renew.ctr-id
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/certbot-renew.pid --cidfile %t/certbot-renew.ctr-id --cgroups=no-conmon -d --replace --name certbot-renew -e PUID=1000 -e PGID=1000 -e MEM_LIMIT=1024M -v /etc/letsencrypt:/etc/letsencrypt:Z -v {{ certbot_secrets_base_path }}:/secrets:Z {{ certbot_container_image }} renew {{ __certbot_params }}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/certbot-renew.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/certbot-renew.ctr-id
+PIDFile=%t/certbot-renew.pid
+KillMode=none
+Type=forking
+TimeoutSec=900
+
+
+[Install]
+WantedBy=multi-user.target default.target

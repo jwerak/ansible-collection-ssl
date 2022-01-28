@@ -1,0 +1,112 @@
+---
+# Stage 0: Base
+- name: Create cert manager user {{ ssl_certbot_username }}
+  ansible.builtin.user:
+    name: "{{ ssl_certbot_username }}"
+    create_home: true
+    generate_ssh_key: true
+  register: __ssl_certbot_user
+    
+# Stage 1: Certificate creation
+- name: Get certificate folder path for domain {{ ssl_domain }}
+  ansible.builtin.set_fact:
+    __ssl_domain_path: "{{ ssl_letsencrypt_path }}/live/{{ ssl_certificate_name }}" 
+
+- name: Check if certificate already exists.
+  ansible.builtin.stat:
+    path: "{{ __ssl_domain_path }}/cert.pem"
+  register: __ssl_letsencrypt_cert
+
+- name: Ensure certbot secrets directory exists
+  ansible.builtin.file:
+    name: "{{ ssl_credentials_path }}"
+    state: directory
+    owner: "{{ ssl_certbot_username }}"
+    mode: 0700
+
+- name: Copy google secrets
+  ansible.builtin.copy:
+    content: "{{ ssl_credentials_google }}" 
+    dest: "{{ ssl_credentials_path }}/{{ ssl_credentials_google_filename }}"
+    owner: "{{ ssl_certbot_username }}"
+    mode: 0400
+
+- name: Ensure letsencrypt dir is present
+  ansible.builtin.file:
+    path: "{{ ssl_letsencrypt_path }}"
+    state: directory
+    owner: "{{ ssl_certbot_username }}"
+    mode: 0700
+
+- name: Create certbot command params
+  ansible.builtin.set_fact:
+    __ssl_certbot_params: >-
+      --dns-google -m {{ ssl_letsencrypt_email }}
+      --agree-tos --non-interactive
+      --dns-google-credentials /secrets/{{ ssl_credentials_google_filename }}
+      --cert-name {{ ssl_certificate_name }}
+      -d {{ ssl_domain }}
+    __ssl_certbot_volumes:
+      - "{{ ssl_letsencrypt_path }}:/etc/letsencrypt:z"
+      - "{{ ssl_credentials_path }}:/secrets:z"
+
+- name: Generate and sign the certificate
+  when: not __ssl_letsencrypt_cert.stat.exists
+  containers.podman.podman_container:
+    name: certbot-run
+    image: "{{ ssl_certbot_container_image }}"
+    command: certonly {{ __ssl_certbot_params }}
+    state: present
+    user: root
+    rm: true
+    volumes: "{{ __ssl_certbot_volumes }}"
+  become_user: "{{ ssl_certbot_username }}"
+
+# Stage 2: certificate renewal
+
+# The script will only create empty file if certs are to be deployed
+- name: Create certbot deploy script
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      touch ${RENEWED_LINEAGE}/deploy-me
+    dest: "{{ ssl_letsencrypt_path }}/renewal-hooks/deploy/touch-deploy-file.sh"
+    mode: 0755
+
+- name: Set certbot user systemd directory variable
+  ansible.builtin.set_fact:
+    __ssl_certbot_systemd_dir: "{{ __ssl_certbot_user.home }}/.local/share/systemd/user/"
+
+- name: Create certbot user systemd directory
+  ansible.builtin.file:
+    path: "{{ __ssl_certbot_systemd_dir }}"
+    state: directory
+    owner: "{{ ssl_certbot_username }}"
+    mode: 0755
+
+- name: Set systemd unit name for certbot renewal
+  ansible.builtin.set_fact:
+    __ssl_certbot_systemd_renew_unit_base: "certbot-renew"
+
+- name: Create systemd service unit for certbot renewal
+  containers.podman.podman_container:
+    name: "{{ __ssl_certbot_systemd_renew_unit_base }}"
+    image: "{{ ssl_certbot_container_image }}"
+    command: renew {{ __ssl_certbot_params }}
+    generate_systemd: 
+      new: true
+      path: "{{ __ssl_certbot_systemd_dir }}"
+      restart_policy: on-failure
+    state: present
+    user: root
+    rm: true
+    volumes: "{{ __ssl_certbot_volumes }}"
+  become_user: "{{ ssl_certbot_username }}"
+  notify: reload systemd daemon
+
+- name: Create systemd timer unit for cert renewal
+  ansible.builtin.template:
+    src: certbot-renew.timer.j2
+    dest: /etc/systemd/system/{{ __ssl_certbot_systemd_renew_unit_base }}.timer
+    mode: 0644
+  notify: reload systemd daemon

@@ -1,0 +1,6 @@
+---
+# vars file for ssl_create
+
+ssl_credentials_path: "/srv/certs/.secret"
+ssl_letsencrypt_path: "/var/letsencrypt"
+ssl_credentials_google_filename: "letsencrypt-dns-admin.json"

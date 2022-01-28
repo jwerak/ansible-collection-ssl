@@ -1,0 +1,7 @@
+---
+# handlers file for ssl_create
+- name: reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+  become_user: "{{ ssl_certbot_username }}"
