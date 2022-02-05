@@ -1,0 +1,3 @@
+---
+# vars file for ssl_setup
+__ssl_certbot_systemd_renew_unit_base: "certbot-renew"

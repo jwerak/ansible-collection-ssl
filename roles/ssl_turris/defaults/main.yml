@@ -1,0 +1,9 @@
+---
+# REQUIRED:
+ssl_domain: ""
+
+# OPTIONAL:
+# Group name where letsencrypt host is, omit if ssl_letsencrypt_host is defined
+ssl_letsencrypt_group: "letsencrypt"
+# The host where certs are located and will host deploy scripts.
+ssl_letsencrypt_host: "{{ groups[ssl_letsencrypt_group][0] }}"

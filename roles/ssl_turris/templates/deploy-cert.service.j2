@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+
+[Unit]
+Description=Deploy cert {{ __ssl_certificate_name }} to {{ ansible_host }}
+Wants={{ __ssl_systemd_deploy_unit_base_name }}.timer
+
+[Service]
+Type=oneshot
+ExecStart={{ __ssl_certbot_user.home }}/bin/{{ __ssl_turris_deploy_script_name }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+---
+# handlers file for ssl_manage_turris
+- name: Restart lighttpd service
+  ansible.builtin.command:
+    cmd: /etc/init.d/lighttpd restart
+
+- name: Reload systemd on letsencrypt host
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: user
+  delegate_to: "{{ ssl_letsencrypt_host }}"
+  become_user: "{{ __ssl_certbot_username }}"

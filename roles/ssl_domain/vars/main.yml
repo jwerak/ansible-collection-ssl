@@ -1,0 +1,4 @@
+---
+# vars file for ssl_create
+__ssl_credentials_google_filename: "letsencrypt-dns-admin.json"
+

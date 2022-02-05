@@ -1,0 +1,75 @@
+---
+- name: Create cert manager user {{ __ssl_certbot_username }}
+  ansible.builtin.user:
+    name: "{{ __ssl_certbot_username }}"
+    create_home: true
+    generate_ssh_key: true
+
+- name: Ensure certbot secrets directory exists
+  ansible.builtin.file:
+    name: "{{ __ssl_credentials_path }}"
+    state: directory
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0700
+
+- name: Copy google secrets
+  ansible.builtin.copy:
+    content: "{{ ssl_credentials_google }}" 
+    dest: "{{ __ssl_credentials_path }}/{{ __ssl_credentials_google_filename }}"
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0400
+
+- name: Ensure letsencrypt dir is present
+  ansible.builtin.file:
+    path: "{{ __ssl_letsencrypt_path }}"
+    state: directory
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0700
+
+# The script will only create empty file if certs are to be deployed
+- name: Create certbot deploy script
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      touch ${RENEWED_LINEAGE}/deploy-me
+    dest: "{{ __ssl_letsencrypt_path }}/renewal-hooks/deploy/touch-deploy-file.sh"
+    mode: 0755
+
+- name: Create certbot user systemd directory
+  ansible.builtin.file:
+    path: "{{ __ssl_certbot_systemd_dir }}"
+    state: directory
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0755
+
+- name: Create systemd service unit for certbot renewal
+  containers.podman.podman_container:
+    name: "{{ __ssl_certbot_systemd_renew_unit_base }}"
+    image: "{{ ssl_certbot_container_image }}"
+    command: renew
+    generate_systemd: 
+      new: false
+      container_prefix: "{{ __ssl_systemd_container_prefix }}"
+      path: "{{ __ssl_certbot_systemd_dir }}"
+      restart_policy: on-failure
+    state: present
+    user: root
+    rm: false
+    volumes: "{{ __ssl_certbot_volumes }}"
+  notify: reload systemd daemon
+
+- name: Create systemd timer unit for cert renewal
+  ansible.builtin.template:
+    src: "{{ __ssl_certbot_systemd_renew_unit_base }}.timer.j2"
+    dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_container_prefix }}-{{ __ssl_certbot_systemd_renew_unit_base }}.timer"
+    mode: 0644
+  notify: Reload systemd user daemon
+
+- name: Run all handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable timer service {{ __ssl_certbot_systemd_renew_unit_base }}
+  ansible.builtin.systemd:
+    enabled: true
+    name: "{{ __ssl_systemd_container_prefix }}-{{ __ssl_certbot_systemd_renew_unit_base }}.timer"
+    scope: user

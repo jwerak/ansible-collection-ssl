@@ -1,0 +1,9 @@
+---
+# Google DNS credentials
+# Content of json file with Google secrets, typically load from file using:
+# certbot_google_json_secret: {{lookup('file', 'letsencrypt-admin.json') }}
+ssl_credentials_google: ""
+ssl_letsencrypt_email: "user@example.com"
+ssl_domain: "example.com"
+
+# Other defaults are located in dependent role, see meta/main.yml

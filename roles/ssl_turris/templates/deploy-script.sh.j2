@@ -1,0 +1,24 @@
+#!/bin/bash
+
+DEST_SSH_SERVER={{ __ssl_turris_user }}@{{  ansible_host }}
+DEST_CERTS_PATH={{ __ssl_lighthttpd_conf_dir_path }}
+CERTS_PATH={{ __ssl_domain_path }}
+
+# Exit if deploy is not required for this domain
+if [ ! -f "${CERTS_PATH}/deploy-me" ]; then
+    echo "file ${CERTS_PATH}/deploy-me not found => deploy not required"
+    exit
+fi
+
+# Prepare certs
+cat ${CERTS_PATH}/privkey.pem > ${CERTS_PATH}/web.pem
+cat ${CERTS_PATH}/cert.pem >> ${CERTS_PATH}/web.pem
+
+scp ${CERTS_PATH}/web.pem ${CERTS_PATH}/chain.pem ${DEST_SSH_SERVER}:${DEST_CERTS_PATH}/
+
+# Set proper permissions on destination host
+ssh ${DEST_SSH_SERVER} chmod 400 ${DEST_CERTS_PATH}/web.pem ${DEST_CERTS_PATH}/chain.pem
+ssh ${DEST_SSH_SERVER} /etc/init.d/lighttpd restart
+
+# Remove request deploy file
+rm -rf "${CERTS_PATH}/deploy-me"
