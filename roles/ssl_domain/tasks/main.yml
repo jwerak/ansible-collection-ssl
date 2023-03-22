@@ -16,11 +16,9 @@
     volumes: "{{ __ssl_certbot_volumes }}"
   become_user: "{{ __ssl_certbot_username }}"
 
-# TODO Wait until certificate exists
 - name: Wait until the cert file is present before continuing
-  wait_for:
+  ansible.builtin.wait_for:
     path: "{{ __ssl_domain_path }}/cert.pem"
     state: present
     sleep: 10
     timeout: 120
-  # when: not __ssl_letsencrypt_cert.stat.exists

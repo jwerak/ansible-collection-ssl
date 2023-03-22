@@ -1,31 +1,4 @@
 ---
-- name: Create cert manager user {{ __ssl_certbot_username }}
-  ansible.builtin.user:
-    name: "{{ __ssl_certbot_username }}"
-    create_home: true
-    generate_ssh_key: true
-
-- name: Ensure certbot secrets directory exists
-  ansible.builtin.file:
-    name: "{{ __ssl_credentials_path }}"
-    state: directory
-    owner: "{{ __ssl_certbot_username }}"
-    mode: 0700
-
-- name: Copy google secrets
-  ansible.builtin.copy:
-    content: "{{ ssl_credentials_google }}" 
-    dest: "{{ __ssl_credentials_path }}/{{ __ssl_credentials_google_filename }}"
-    owner: "{{ __ssl_certbot_username }}"
-    mode: 0400
-
-- name: Ensure letsencrypt dir is present
-  ansible.builtin.file:
-    path: "{{ __ssl_letsencrypt_path }}"
-    state: directory
-    owner: "{{ __ssl_certbot_username }}"
-    mode: 0700
-
 # The script will only create empty file if certs are to be deployed
 - name: Create certbot deploy script
   ansible.builtin.copy:
@@ -35,7 +8,7 @@
     dest: "{{ __ssl_letsencrypt_path }}/renewal-hooks/deploy/touch-deploy-file.sh"
     mode: 0755
 
-- name: Create certbot user systemd directory
+- name: Create certbot user systemd director__ssl_certbot_systemd_renew_unit_base__ssl_certbot_systemd_renew_unit_basey
   ansible.builtin.file:
     path: "{{ __ssl_certbot_systemd_dir }}"
     state: directory
@@ -47,7 +20,7 @@
     name: "{{ __ssl_certbot_systemd_renew_unit_base }}"
     image: "{{ ssl_certbot_container_image }}"
     command: renew
-    generate_systemd: 
+    generate_systemd:
       new: false
       container_prefix: "{{ __ssl_systemd_container_prefix }}"
       path: "{{ __ssl_certbot_systemd_dir }}"
@@ -56,7 +29,7 @@
     user: root
     rm: false
     volumes: "{{ __ssl_certbot_volumes }}"
-  notify: reload systemd daemon
+  notify: Reload systemd user daemon
 
 - name: Create systemd timer unit for cert renewal
   ansible.builtin.template:

@@ -1,0 +1,40 @@
+---
+# These tasks will most likely reuqire privileged user
+- name: Create cert manager user {{ certbot_username }}
+  ansible.builtin.user:
+    name: "{{ certbot_username }}"
+    create_home: true
+    generate_ssh_key: true
+
+- name: Add my ssh pub key for remote user {{ certbot_username }}
+  ansible.posix.authorized_key:
+    user: "{{ certbot_username }}"
+    key: "{{ ssh_pub_key }}"
+
+- name: Ensure certbot secrets directory exists
+  ansible.builtin.file:
+    name: "{{ __ssl_credentials_path }}"
+    state: directory
+    owner: "{{ __ssl_certbot_username }}"
+    group: "{{ __ssl_certbot_username }}"
+    mode: 0755
+  become_user: root
+  become: true
+
+- name: Copy google secrets
+  ansible.builtin.copy:
+    content: "{{ ssl_credentials_google }}"
+    dest: "{{ __ssl_credentials_path }}/{{ __ssl_credentials_google_filename }}"
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0400
+  become_user: root
+  become: true
+
+- name: Ensure letsencrypt dir is present
+  ansible.builtin.file:
+    path: "{{ __ssl_letsencrypt_path }}/renewal-hooks/deploy/"
+    state: directory
+    owner: "{{ __ssl_certbot_username }}"
+    mode: 0700
+  become_user: root
+  become: true
