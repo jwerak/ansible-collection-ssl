@@ -19,16 +19,16 @@
   delegate_to: "{{ ssl_letsencrypt_host }}"
 
 - name: Create lighttpd pemfile
-  copy:
+  ansible.builtin.copy:
     dest: "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_pemfile_filename }}"
     content: |-
       {{ __ssl_privkey.content | b64decode }}
-      {{ __ssl_cert.content | b64decode  }}
+      {{ __ssl_cert.content | b64decode }}
     mode: 0400
   notify: Restart lighttpd service
 
 - name: Create lighttpd ca-file
-  copy:
+  ansible.builtin.copy:
     dest: "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"
     content: "{{ __ssl_chain.content | b64decode }}"
     mode: 0400
@@ -38,27 +38,26 @@
   ansible.builtin.set_fact:
     __ssl_privkey: ""
     __ssl_cert: ""
-    __ssl_chain: ""  
+    __ssl_chain: ""
 
 - name: Set path to pemfile in lighttpd ssl config
   ansible.builtin.lineinfile:
     path: "{{ __ssl_lighthttpd_ssl_conf_file_path }}"
     regexp: "^ssl.pemfile ="
-    line: "ssl.pemfile = \"{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_pemfile_filename }}\""
+    line: 'ssl.pemfile = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_pemfile_filename }}"'
   notify: Restart lighttpd service
 
 - name: Set path to chain in lighttpd ssl config
   ansible.builtin.lineinfile:
     path: "{{ __ssl_lighthttpd_ssl_conf_file_path }}"
     regexp: "^ssl.ca-file ="
-    line: "ssl.ca-file = \"{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}\""
+    line: 'ssl.ca-file = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"'
   notify: Restart lighttpd service
 
 # TODO: Check service is running and certificate is valid
 
-
 # Configure service to automatic cert re-deploy
-- name: load info about certbot user
+- name: Load info about certbot user
   ansible.builtin.user:
     name: "{{ __ssl_certbot_username }}"
     generate_ssh_key: true
