@@ -1,6 +1,8 @@
 #!/bin/bash
 
-DEST_SSH_SERVER={{ __ssl_turris_user }}@{{  ansible_host }}
+set -e
+
+DEST_SSH_SERVER={{ __ssl_turris_user }}@{{ ansible_host }}
 DEST_CERTS_PATH={{ __ssl_lighthttpd_conf_dir_path }}
 CERTS_PATH={{ __ssl_domain_path }}
 

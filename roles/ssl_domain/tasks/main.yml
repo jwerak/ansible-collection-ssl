@@ -1,4 +1,12 @@
 ---
+- name: Ensure letsencrypt domain directory exists
+  ansible.builtin.file:
+    path: "{{ __ssl_domain_path }}"
+    state: directory
+    recurse: true
+    mode: 0755
+    owner: "{{ __ssl_certbot_username }}"
+
 - name: Check if certificate already exists.
   ansible.builtin.stat:
     path: "{{ __ssl_domain_path }}/cert.pem"

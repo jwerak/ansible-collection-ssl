@@ -3,7 +3,7 @@
 __ssl_lighthttpd_conf_dir_path: "/etc/lighttpd"
 __ssl_lighthttpd_cert_pemfile_filename: "web.pem"
 __ssl_lighthttpd_cert_ca_file_filename: "chain.pem"
-__ssl_lighthttpd_ssl_conf_file_path: "{{ __ssl_lighthttpd_conf_dir_path }}/conf.d/ssl-enable.conf"
+__ssl_lighthttpd_ssl_conf_file_path: "{{ __ssl_lighthttpd_conf_dir_path }}/conf.d/40-ssl-enable.conf"
 __ssl_systemd_deploy_unit_base_name: deploy-cert-{{ __ssl_certificate_name | regex_replace("[^A-Za-z0-9]", "-") }}-to-{{ ansible_host | regex_replace("[^A-Za-z0-9]", "-") }}
 __ssl_turris_deploy_script_name: "deploy-{{ __ssl_certificate_name }}-to-{{ ansible_host }}.sh"
 

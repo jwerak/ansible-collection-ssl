@@ -1,6 +1,6 @@
 ---
 # defaults file for ssl_common_vars
-ssl_certbot_container_image: "docker.io/certbot/dns-google:arm64v8-latest"
+ssl_certbot_container_image: "docker.io/certbot/dns-google"
 
 # Optional, not needed for all roles that import this role
 ssl_domain: ""

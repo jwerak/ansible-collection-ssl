@@ -54,7 +54,26 @@
     line: 'ssl.ca-file = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"'
   notify: Restart lighttpd service
 
-# TODO: Check service is running and certificate is valid
+- name: Wait for lighttpd to be listening
+  ansible.builtin.wait_for:
+    port: 443
+    host: "{{ ansible_host }}"
+    timeout: 60
+  delegate_to: localhost
+
+- name: Check SSL certificate
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}"
+    return_content: false
+    validate_certs: true
+  failed_when: false
+  delegate_to: localhost
+  register: result
+
+- name: Fail if domain not accessible and print output
+  ansible.builtin.fail:
+    msg: "Failed due to:\n{{ result.msg }}"
+  when: result.status < 0
 
 # Configure service to automatic cert re-deploy
 - name: Load info about certbot user
@@ -62,22 +81,22 @@
     name: "{{ __ssl_certbot_username }}"
     generate_ssh_key: true
   register: __ssl_certbot_user
+  become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"
 
-# certbot user can ssh to turris
 - name: Enable certbot user to ssh to turris host
   ansible.posix.authorized_key:
     user: "{{ __ssl_turris_user }}"
     state: present
     key: "{{ __ssl_certbot_user.ssh_public_key }}"
 
-# Create deploy systemd service
-- name: Create deploy script
+- name: Create deploy systemd service directory
   ansible.builtin.file:
     path: "{{ __ssl_certbot_user.home }}/bin/"
     state: directory
     mode: 0755
   delegate_to: "{{ ssl_letsencrypt_host }}"
+  become: true
 
 - name: Create deploy script
   ansible.builtin.template:
@@ -86,6 +105,7 @@
     mode: 0700
     owner: "{{ __ssl_certbot_username }}"
   delegate_to: "{{ ssl_letsencrypt_host }}"
+  become: true
 
 - name: Create Deploy systemd unit
   ansible.builtin.template:
@@ -93,7 +113,7 @@
     dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_deploy_unit_base_name }}.service"
     mode: 0644
     owner: "{{ __ssl_certbot_username }}"
-  become_user: "{{ __ssl_certbot_username }}"
+  become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"
   notify: Reload systemd on letsencrypt host
 
@@ -103,7 +123,7 @@
     dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_deploy_unit_base_name }}.timer"
     mode: 0644
     owner: "{{ __ssl_certbot_username }}"
-  become_user: "{{ __ssl_certbot_username }}"
+  become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"
   notify: Reload systemd on letsencrypt host
 
@@ -116,4 +136,5 @@
     name: "{{ __ssl_systemd_deploy_unit_base_name }}.timer"
     scope: user
   become_user: "{{ __ssl_certbot_username }}"
+  become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"
