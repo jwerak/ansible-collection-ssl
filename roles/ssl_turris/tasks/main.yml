@@ -5,6 +5,7 @@
     src: "{{ __ssl_domain_path }}/privkey.pem"
   register: __ssl_privkey
   delegate_to: "{{ ssl_letsencrypt_host }}"
+  become: true
 
 - name: Load cert contents
   ansible.builtin.slurp:
@@ -53,6 +54,9 @@
     regexp: "^ssl.ca-file ="
     line: 'ssl.ca-file = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"'
   notify: Restart lighttpd service
+
+- name: Force run handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Wait for lighttpd to be listening
   ansible.builtin.wait_for:
