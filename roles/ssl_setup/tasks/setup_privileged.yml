@@ -38,3 +38,8 @@
     mode: 0700
   become_user: root
   become: true
+
+- name: Enable linger for certbot user
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ __ssl_certbot_username }}
+    creates: /var/lib/systemd/linger/{{ __ssl_certbot_username }}
