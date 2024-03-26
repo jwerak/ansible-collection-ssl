@@ -3,5 +3,5 @@
 # Content of json file with Google secrets, typically load from file using:
 # certbot_google_json_secret: {{lookup('file', 'letsencrypt-admin.json') }}
 ssl_credentials_google: ""
-ssl_setup_become_user: "root"
+ssl_setup_become_user: root
 # Other defaults are located in dependent role, see meta/main.yml

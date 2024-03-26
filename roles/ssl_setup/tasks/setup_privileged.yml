@@ -17,7 +17,7 @@
     state: directory
     owner: "{{ __ssl_certbot_username }}"
     group: "{{ __ssl_certbot_username }}"
-    mode: 0755
+    mode: "0755"
   become_user: root
   become: true
 
@@ -26,7 +26,7 @@
     content: "{{ ssl_credentials_google }}"
     dest: "{{ __ssl_credentials_path }}/{{ __ssl_credentials_google_filename }}"
     owner: "{{ __ssl_certbot_username }}"
-    mode: 0400
+    mode: "0400"
   become_user: root
   become: true
 
@@ -35,7 +35,7 @@
     path: "{{ __ssl_letsencrypt_path }}/renewal-hooks/deploy/"
     state: directory
     owner: "{{ __ssl_certbot_username }}"
-    mode: 0700
+    mode: "0700"
   become_user: root
   become: true
 

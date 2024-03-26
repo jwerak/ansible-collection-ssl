@@ -25,14 +25,14 @@
     content: |-
       {{ __ssl_privkey.content | b64decode }}
       {{ __ssl_cert.content | b64decode }}
-    mode: 0400
+    mode: "0400"
   notify: Restart lighttpd service
 
 - name: Create lighttpd ca-file
   ansible.builtin.copy:
     dest: "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"
     content: "{{ __ssl_chain.content | b64decode }}"
-    mode: 0400
+    mode: "0400"
   notify: Restart lighttpd service
 
 - name: Cleanup variables with ssl certs
@@ -44,15 +44,15 @@
 - name: Set path to pemfile in lighttpd ssl config
   ansible.builtin.lineinfile:
     path: "{{ __ssl_lighthttpd_ssl_conf_file_path }}"
-    regexp: "^ssl.pemfile ="
-    line: 'ssl.pemfile = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_pemfile_filename }}"'
+    regexp: ^ssl.pemfile =
+    line: ssl.pemfile = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_pemfile_filename }}"
   notify: Restart lighttpd service
 
 - name: Set path to chain in lighttpd ssl config
   ansible.builtin.lineinfile:
     path: "{{ __ssl_lighthttpd_ssl_conf_file_path }}"
-    regexp: "^ssl.ca-file ="
-    line: 'ssl.ca-file = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"'
+    regexp: ^ssl.ca-file =
+    line: ssl.ca-file = "{{ __ssl_lighthttpd_conf_dir_path }}/{{ __ssl_lighthttpd_cert_ca_file_filename }}"
   notify: Restart lighttpd service
 
 - name: Force run handlers
@@ -67,7 +67,7 @@
 
 - name: Check SSL certificate
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}"
+    url: https://{{ ansible_host }}
     return_content: false
     validate_certs: true
   failed_when: false
@@ -98,7 +98,7 @@
   ansible.builtin.file:
     path: "{{ __ssl_certbot_user.home }}/bin/"
     state: directory
-    mode: 0755
+    mode: "0755"
   delegate_to: "{{ ssl_letsencrypt_host }}"
   become: true
 
@@ -106,7 +106,7 @@
   ansible.builtin.template:
     src: deploy-script.sh.j2
     dest: "{{ __ssl_certbot_user.home }}/bin/{{ __ssl_turris_deploy_script_name }}"
-    mode: 0700
+    mode: "0700"
     owner: "{{ __ssl_certbot_username }}"
   delegate_to: "{{ ssl_letsencrypt_host }}"
   become: true
@@ -115,7 +115,7 @@
   ansible.builtin.template:
     src: deploy-cert.service.j2
     dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_deploy_unit_base_name }}.service"
-    mode: 0644
+    mode: "0644"
     owner: "{{ __ssl_certbot_username }}"
   become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"
@@ -125,7 +125,7 @@
   ansible.builtin.template:
     src: deploy-cert.timer.j2
     dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_deploy_unit_base_name }}.timer"
-    mode: 0644
+    mode: "0644"
     owner: "{{ __ssl_certbot_username }}"
   become: true
   delegate_to: "{{ ssl_letsencrypt_host }}"

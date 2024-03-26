@@ -4,7 +4,7 @@
     path: "{{ __ssl_domain_path }}"
     state: directory
     recurse: true
-    mode: 0755
+    mode: "0755"
     owner: "{{ __ssl_certbot_username }}"
 
 - name: Check if certificate already exists.
