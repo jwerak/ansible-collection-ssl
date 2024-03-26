@@ -6,14 +6,14 @@
       #!/bin/bash
       touch ${RENEWED_LINEAGE}/deploy-me
     dest: "{{ __ssl_letsencrypt_path }}/renewal-hooks/deploy/touch-deploy-file.sh"
-    mode: 0755
+    mode: "0755"
 
 - name: Create certbot user systemd director__ssl_certbot_systemd_renew_unit_base__ssl_certbot_systemd_renew_unit_basey
   ansible.builtin.file:
     path: "{{ __ssl_certbot_systemd_dir }}"
     state: directory
     owner: "{{ __ssl_certbot_username }}"
-    mode: 0755
+    mode: "0755"
 
 - name: Create systemd service unit for certbot renewal
   containers.podman.podman_container:
@@ -35,7 +35,7 @@
   ansible.builtin.template:
     src: "{{ __ssl_certbot_systemd_renew_unit_base }}.timer.j2"
     dest: "{{ __ssl_certbot_systemd_dir }}/{{ __ssl_systemd_container_prefix }}-{{ __ssl_certbot_systemd_renew_unit_base }}.timer"
-    mode: 0644
+    mode: "0644"
   notify: Reload systemd user daemon
 
 - name: Run all handlers

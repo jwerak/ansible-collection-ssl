@@ -1,14 +1,14 @@
 ---
 # vars file for ssl_common_vars
 
-__ssl_credentials_path: "/srv/certs/.secret"
-__ssl_letsencrypt_path: "/var/letsencrypt"
-__ssl_credentials_google_filename: "letsencrypt-dns-admin.json"
-__ssl_certbot_username: "certbot"
+__ssl_credentials_path: /srv/certs/.secret
+__ssl_letsencrypt_path: /var/letsencrypt
+__ssl_credentials_google_filename: letsencrypt-dns-admin.json
+__ssl_certbot_username: certbot
 
 __ssl_certbot_user_homedir: /var/home/certbot
 __ssl_certbot_systemd_dir: "{{ __ssl_certbot_user_homedir }}/.local/share/systemd/user/"
-__ssl_systemd_container_prefix: "container"
+__ssl_systemd_container_prefix: container
 
 __ssl_certificate_name: "{{ ssl_domain | replace('*.', '') }}"
 __ssl_domain_path: "{{ __ssl_letsencrypt_path }}/live/{{ __ssl_certificate_name }}"
