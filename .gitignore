@@ -1,0 +1,8 @@
+# Local Ansible state (installed collections, lock files)
+.ansible/
+
+# Editor state
+.vscode/
+
+# Logs
+ansible-navigator.log
